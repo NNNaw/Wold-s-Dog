@@ -21,9 +21,7 @@ function App() {
   return (
 
     <div className='div_app'>
-      <div className='div'>
-        <h2>sad</h2>
-      </div>
+     
       <Suspense fallback={<div> Loading ... </div>}>
         {/* <Router history={history}> */}
 

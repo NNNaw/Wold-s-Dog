@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-
 import { makeStyles } from '@material-ui/core/styles';
+
+
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 
 import IconButton from '@material-ui/core/IconButton';
 import InfoIcon from '@material-ui/icons/Info';
-
 import dogApi from '../../../../api/dogApi';
 
-
-
+import Loading from './../../Components/Loading/Loading'
 
 const useStyles = makeStyles((theme) => ({
 
@@ -51,6 +50,7 @@ const useStyles = makeStyles((theme) => ({
 
     }
 }));
+
 
 
 const setCol = (obj) => {
@@ -93,7 +93,7 @@ const renderItem = (lst, classes) => {
             setCol(obj)
         }
         else {
-            obj.col = 1.5;
+            obj.col = 2;
             setCol(obj)
         }
 
@@ -102,7 +102,7 @@ const renderItem = (lst, classes) => {
                 className={heightImage + 200 >= widthImage && widthImage > 800 && obj.col >= 3 ? classes.imageTop : classes.imageCenter}
                 src={dog.image.url} alt={dog.name} />
             <GridListTileBar
-                title={dog.name}
+                title={`${dog.id} - ${dog.name}`}
                 subtitle={<span>Breed Group: {dog.breed_group}</span>}
                 actionIcon={
                     <IconButton
@@ -115,46 +115,68 @@ const renderItem = (lst, classes) => {
             />
 
         </GridListTile >
-
     })
+
+
 }
 
 function MainDog(props) {
 
+    const [currentPage, setPageCurrent] = useState(0);
+
     const [dogList, setDogList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const classes = useStyles();
+
+
+    const handleScroll = (e) => {
+        const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+
+        if (scrollHeight - Math.round(scrollTop) === clientHeight) {
+
+            setPageCurrent(currentPage + 1);
+        }
+    }
+
 
     useEffect(() => {
 
         const fetchDogList = async () => {
-
+            setIsLoading(true);
             try {
+
                 const params = {
-                    limit: 60,
-                    page: 1,
+                    limit: 15,
+                    page: currentPage,
                 }
                 const payLoad = await dogApi.getPaginationList(params);
 
-
-                setDogList(payLoad);
+                setDogList((prevDogList) => [...prevDogList, ...payLoad]);
+                setIsLoading(false);
 
             } catch (error) {
                 console.log(error);
             }
-
         }
         fetchDogList();
 
-    }, [])
-    const classes = useStyles();
-    // console.log(dogList);
+    }, [currentPage])
+
     return (
+        <>
+            {console.log('render')}
+            <div className={classes.root} >
+                <GridList onScroll={handleScroll} cellHeight={300} spacing={2} className={classes.gridList} cols={7} rows={4}>
+                    {renderItem(dogList, classes)}
+                </GridList>
 
-        <div className={classes.root}>
-            <GridList cellHeight={300} spacing={2} className={classes.gridList} cols={7} rows={4}>
-                {renderItem(dogList, classes)}
-            </GridList>
-        </div>
-
+            </div>
+            {isLoading && <Loading loading='loading...' />}
+          
+            <div styles={{ height: 100, width: "100%" }} className="footer">
+                <h1>Footer</h1>
+            </div>
+        </>
     );
 }
 
