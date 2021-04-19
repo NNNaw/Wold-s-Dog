@@ -11,8 +11,8 @@ import {
 
 import NotFound from './Components/NotFound/index'
 import Cat from './Features/Cat/index'
-
-
+import Header from './Components/Header/Header'
+import Footer from './Components/Footer/Footer'
 const Dog = React.lazy(() => import('./Features/Dog'))
 
 
@@ -21,12 +21,14 @@ function App() {
   return (
 
     <div className='div_app'>
-     
+
+
       <Suspense fallback={<div> Loading ... </div>}>
         {/* <Router history={history}> */}
 
         <Router>
-
+          <Header />
+          
           <ul>
             <li> <Link to="/dogs">Dog</Link></li>
             <li> <Link to="/dogs/add">Add Dog</Link></li>
@@ -47,7 +49,9 @@ function App() {
 
           </Switch>
         </Router>
+
       </Suspense>
+      <Footer />
     </div>
   );
 }

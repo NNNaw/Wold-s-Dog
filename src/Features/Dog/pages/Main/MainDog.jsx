@@ -7,7 +7,7 @@ import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 
 import IconButton from '@material-ui/core/IconButton';
-import InfoIcon from '@material-ui/icons/Info';
+import { FavoriteBorder, ThumbDown, ThumbUp } from '@material-ui/icons';
 import dogApi from '../../../../api/dogApi';
 
 import Loading from './../../Components/Loading/Loading'
@@ -27,6 +27,11 @@ const useStyles = makeStyles((theme) => ({
     },
     icon: {
         color: 'rgba(255, 255, 255, 0.54)',
+    },
+    icon_action: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: "center",
     },
     imageCenter: {
         // top: "60%"
@@ -80,11 +85,11 @@ const renderItem = (lst, classes) => {
     }
 
     // let row_remain = 4;
-    return lst?.map((dog, index) => {
+    return lst?.map((image, index) => {
 
         //set col
-        const widthImage = dog.image.width;
-        const heightImage = dog.image.height;
+        const widthImage = image.width;
+        const heightImage = image.height;
         if (widthImage >= 1000) {
             obj.col = 3;
             setCol(obj)
@@ -100,19 +105,27 @@ const renderItem = (lst, classes) => {
         return <GridListTile key={index} cols={obj.col} rows={1}>
             <img
                 className={heightImage + 200 >= widthImage && widthImage > 800 && obj.col >= 3 ? classes.imageTop : classes.imageCenter}
-                src={dog.image.url} alt={dog.name} />
+                src={image.url} alt='Error' />
             <GridListTileBar
-                title={`${dog.id} - ${dog.name}`}
-                subtitle={<span>Breed Group: {dog.breed_group}</span>}
+                title={<FavoriteBorder onClick={() => { dogApi.postFavouritesDog(image.id) }} />}
+                // subtitle={<span>Breed Group: {dog.breed_group}</span>}
+
                 actionIcon={
                     <IconButton
-                        aria-label={`info about ${11}`}
+                        aria-label={`info about ${0}`}
                         className={classes.icon}
                     >
-                        <InfoIcon />
+                        <div className={classes.icon_action}>
+                            <ThumbUp onClick={() => dogApi.postVote(image.id, 1)} />
+                            --
+                            <ThumbDown onClick={() => dogApi.postVote(image.id, 0)} />
+                        </div>
                     </IconButton>
+
                 }
+
             />
+
 
         </GridListTile >
     })
@@ -124,7 +137,10 @@ function MainDog(props) {
 
     const [currentPage, setPageCurrent] = useState(0);
 
-    const [dogList, setDogList] = useState([]);
+    // const [dogList, setDogList] = useState([]);
+    const [listOfDogImage, setListOfDogImage] = useState([]);
+
+
     const [isLoading, setIsLoading] = useState(true);
     const classes = useStyles();
 
@@ -141,18 +157,28 @@ function MainDog(props) {
 
     useEffect(() => {
 
+        setIsLoading(true);
         const fetchDogList = async () => {
-            setIsLoading(true);
             try {
 
                 const params = {
+                    size: 'full',
+                    mime_types: [],
+                    order: 'RANDOM',
                     limit: 15,
                     page: currentPage,
+                    category_ids: [],
+                    format: 'json',
+                    breed_id: '',
                 }
-                const payLoad = await dogApi.getPaginationList(params);
+                const payLoad = await dogApi.getListOfDogImage(params);
 
-                setDogList((prevDogList) => [...prevDogList, ...payLoad]);
                 setIsLoading(false);
+                setListOfDogImage((prev) =>
+                    [...prev, ...payLoad]
+                );
+
+                console.log('use state 1');
 
             } catch (error) {
                 console.log(error);
@@ -160,22 +186,23 @@ function MainDog(props) {
         }
         fetchDogList();
 
-    }, [currentPage])
+    }, [currentPage]);
+
 
     return (
         <>
-            {console.log('render')}
+            {console.log(listOfDogImage)}
             <div className={classes.root} >
                 <GridList onScroll={handleScroll} cellHeight={300} spacing={2} className={classes.gridList} cols={7} rows={4}>
-                    {renderItem(dogList, classes)}
+                    {renderItem(listOfDogImage, classes)}
                 </GridList>
 
             </div>
-            {isLoading && <Loading loading='loading...' />}
-          
-            <div styles={{ height: 100, width: "100%" }} className="footer">
-                <h1>Footer</h1>
-            </div>
+
+            {isLoading ? <Loading loading='loading...' />
+                : <div styles={{ height: 100, width: 100 }} className="Loading">--</div>}
+
+
         </>
     );
 }
